@@ -1,5 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+apicache-py3
+output
 *.py[cod]
 *$py.class
 
@@ -127,3 +129,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+throttle.ctrl
+pywikibot.lwp
