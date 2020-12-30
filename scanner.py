@@ -9,83 +9,104 @@ import json
 import os
 import errno
 
-site = pywikibot.Site("eft:en")
-questPage = pywikibot.Page(site, u"Quests")
-questText = questPage.text
 
-hideoutPage = pywikibot.Page(site, u"Hideout")
-hideoutText = hideoutPage.text
+def Import():
+    site = pywikibot.Site("eft:en")
+    questPage = pywikibot.Page(site, u"Quests")
+    questText = questPage.text
 
-outputDir = os.path.dirname(os.path.abspath(__file__))+"/output"
-questsOutput = outputDir + "/quest.json"
-hideoutOutput = outputDir + "/hideout.json"
+    hideoutPage = pywikibot.Page(site, u"Hideout")
+    hideoutText = hideoutPage.text
 
-questItemList = []
-hideoutItemList = []
+    outputDir = os.path.dirname(os.path.abspath(__file__))+"/output"
+    questsOutput = outputDir + "/quest.json"
+    hideoutOutput = outputDir + "/hideout.json"
 
-# Create quest object
-for line in questText.splitlines():
-    findInRaid = False
-    if ("raid" in line):
-        findInRaid = True
+    questItemList = []
+    hideoutItemList = []
 
-    if ("Find " in line):
-        match = re.match(r".*\[\[(.*?)\]\].*", line)
-        if (match):
-            matchSplit = match.groups()[0] .split('|')
-            if (len(matchSplit) > 0):
-                # If the item already exists, make sure findInRaid is set if it should be for any of them
-                itemExists = False
-                for obj in questItemList:
-                    if obj["name"] == matchSplit[0]:
-                        itemExists = True
-                        if (item["findInRaid"] or findInRaid):
-                            item["findInRaid"] = True
+    # Create quest object
+    for line in questText.splitlines():
+        findInRaid = False
+        if ("raid" in line):
+            findInRaid = True
 
-                # Only add items once
-                if (not itemExists):
-                    item = {}
-                    item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
-                    item["name"] = matchSplit[0]
+        if ("Find " in line):
+            match = re.match(r".*\[\[(.*?)\]\].*", line)
+            if (match):
+                matchSplit = match.groups()[0] .split('|')
+                if (len(matchSplit) > 0):
+                    # If the item already exists, make sure findInRaid is set if it should be for any of them
+                    itemExists = False
+                    for obj in questItemList:
+                        if obj["name"] == matchSplit[0]:
+                            itemExists = True
+                            obj["count"] = obj["count"] + GetAmount(line)
+                            if (item["findInRaid"] or findInRaid):
+                                item["findInRaid"] = True
 
-                    item["findInRaid"] = findInRaid
-                    questItemList.append(item)
+                    # Only add items once
+                    if (not itemExists):
+                        item = {}
+                        item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
+                        item["name"] = matchSplit[0]
+                        item["count"] = GetAmount(line)
 
-# Create hideout object
-for line in hideoutText.splitlines():
-    if (re.search(r"\*\s*\d+", line)):
-        match = re.match(r".*\[\[(.*?)\]\].*", line)
-        if (match):
-            matchSplit = match.groups()[0] .split('|')
-            if (len(matchSplit) > 0):
-                if not any(x["name"] == matchSplit[0] for x in hideoutItemList):
-                    item = {}
-                    item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
-                    item["name"] = matchSplit[0]
+                        item["findInRaid"] = findInRaid
+                        questItemList.append(item)
 
-                    hideoutItemList.append(item)
+    # Create hideout object
+    for line in hideoutText.splitlines():
+        if (re.search(r"\*\s*\d+", line)):
+            match = re.match(r".*\[\[(.*?)\]\].*", line)
+            if (match):
+                matchSplit = match.groups()[0] .split('|')
+                if (len(matchSplit) > 0):
+                    itemExists = False
+                    for obj in questItemList:
+                        if obj["name"] == matchSplit[0]:
+                            itemExists = True
+                            obj["count"] = obj["count"] + GetAmount(line)
+
+                    if not itemExists:
+                        item = {}
+                        item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
+                        item["name"] = matchSplit[0]
+                        item["count"] = GetAmount(line)
+
+                        hideoutItemList.append(item)
+
+    # Create quest.json
+    if not os.path.exists(os.path.dirname(questsOutput)):
+        try:
+            os.makedirs(os.path.dirname(questsOutput))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+
+    # Create hideout.json
+    if not os.path.exists(os.path.dirname(questsOutput)):
+        try:
+            os.makedirs(os.path.dirname(questsOutput))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+
+    # Write quest.json
+    with open(questsOutput, "w", encoding="utf-8") as f:
+        json.dump(questItemList, f, ensure_ascii=False, indent=4)
+
+    # Write hideout.json
+    with open(hideoutOutput, "w", encoding="utf-8") as f:
+        json.dump(hideoutItemList, f, ensure_ascii=False, indent=4)
 
 
-# Create quest.json
-if not os.path.exists(os.path.dirname(questsOutput)):
-    try:
-        os.makedirs(os.path.dirname(questsOutput))
-    except OSError as exc:  # Guard against race condition
-        if exc.errno != errno.EEXIST:
-            raise
+def GetAmount(line):
+    match = re.match(r".*?(\d+).*?\[.*", line)
+    if (match):
+        return int(match.groups()[0])
+    else:
+        return 1
 
-# Create hideout.json
-if not os.path.exists(os.path.dirname(questsOutput)):
-    try:
-        os.makedirs(os.path.dirname(questsOutput))
-    except OSError as exc:  # Guard against race condition
-        if exc.errno != errno.EEXIST:
-            raise
 
-# Write quest.json
-with open(questsOutput, "w", encoding="utf-8") as f:
-    json.dump(questItemList, f, ensure_ascii=False, indent=4)
-
-# Write hideout.json
-with open(hideoutOutput, "w", encoding="utf-8") as f:
-    json.dump(hideoutItemList, f, ensure_ascii=False, indent=4)
+Import()
