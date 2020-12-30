@@ -63,7 +63,7 @@ def Import():
                 matchSplit = match.groups()[0] .split('|')
                 if (len(matchSplit) > 0):
                     itemExists = False
-                    for obj in questItemList:
+                    for obj in hideoutItemList:
                         if obj["name"] == matchSplit[0]:
                             itemExists = True
                             obj["count"] = obj["count"] + GetAmount(line)
@@ -102,9 +102,22 @@ def Import():
 
 
 def GetAmount(line):
-    match = re.match(r".*?(\d+).*?\[.*", line)
+    if ("key " in line.lower()):
+        return 1
+
+    match = re.match(r".*?([\d|\.]+)[\w|\s]*?\[", line)
+
+    if (not match):
+        match = re.match(r".*?([\d|\.]+)[\s]*pcs", line)
+
     if (match):
-        return int(match.groups()[0])
+        number = match.groups()[0]
+        number = number.replace(".", "")
+
+        if (number.isdigit()):
+            return int(number)
+        else:
+            return 1
     else:
         return 1
 
