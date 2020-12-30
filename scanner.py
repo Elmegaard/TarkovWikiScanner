@@ -42,17 +42,17 @@ def Import():
                         if obj["name"] == matchSplit[0]:
                             itemExists = True
                             obj["count"] = obj["count"] + GetAmount(line)
-                            if (item["findInRaid"] or findInRaid):
-                                item["findInRaid"] = True
+                            if (item["raid"] or findInRaid):
+                                item["raid"] = True
 
                     # Only add items once
                     if (not itemExists):
                         item = {}
-                        item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
+                        item["wiki"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
                         item["name"] = matchSplit[0]
                         item["count"] = GetAmount(line)
 
-                        item["findInRaid"] = findInRaid
+                        item["raid"] = findInRaid
                         questItemList.append(item)
 
     # Create hideout object
@@ -70,7 +70,7 @@ def Import():
 
                     if not itemExists:
                         item = {}
-                        item["wikilink"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
+                        item["wiki"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
                         item["name"] = matchSplit[0]
                         item["count"] = GetAmount(line)
 
