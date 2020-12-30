@@ -40,7 +40,7 @@ for line in questText.splitlines():
                     if obj["name"] == matchSplit[0]:
                         itemExists = True
                         if (item["findInRaid"] or findInRaid):
-                            item["findInRaid"] = findInRaid
+                            item["findInRaid"] = True
 
                 # Only add items once
                 if (not itemExists):
