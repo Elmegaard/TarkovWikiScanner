@@ -22,8 +22,8 @@ def Import():
     questsOutput = outputDir + "/quest.json"
     hideoutOutput = outputDir + "/hideout.json"
 
-    questItemList = []
-    hideoutItemList = []
+    questItemList = {}
+    hideoutItemList = {}
 
     # Create quest object
     for line in questText.splitlines():
@@ -36,24 +36,16 @@ def Import():
             if (match):
                 matchSplit = match.groups()[0] .split('|')
                 if (len(matchSplit) > 0):
-                    # If the item already exists, make sure findInRaid is set if it should be for any of them
-                    itemExists = False
-                    for obj in questItemList:
-                        if obj["name"] == matchSplit[0]:
-                            itemExists = True
-                            obj["count"] = obj["count"] + GetAmount(line)
-                            if (item["raid"] or findInRaid):
-                                item["raid"] = True
-
-                    # Only add items once
-                    if (not itemExists):
+                    name = matchSplit[0]
+                    if name in questItemList:
+                        item = questItemList[name]
+                    else:
                         item = {}
+                        item["name"] = name
                         item["wiki"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
-                        item["name"] = matchSplit[0]
-                        item["count"] = GetAmount(line)
-
-                        item["raid"] = findInRaid
-                        questItemList.append(item)
+                        questItemList[name] = item
+                    countKey = "fir_count" if findInRaid else "count"
+                    item[countKey] = item.get(countKey) or 0 + GetAmount(line)
 
     # Create hideout object
     for line in hideoutText.splitlines():
@@ -62,19 +54,15 @@ def Import():
             if (match):
                 matchSplit = match.groups()[0] .split('|')
                 if (len(matchSplit) > 0):
-                    itemExists = False
-                    for obj in hideoutItemList:
-                        if obj["name"] == matchSplit[0]:
-                            itemExists = True
-                            obj["count"] = obj["count"] + GetAmount(line)
-
-                    if not itemExists:
+                    name = matchSplit[0]
+                    if name in hideoutItemList:
+                        item = hideoutItemList[name]
+                    else:
                         item = {}
+                        hideoutItemList[name] = item
+                        item["name"] = name
                         item["wiki"] = "https://escapefromtarkov.gamepedia.com/" + matchSplit[0]
-                        item["name"] = matchSplit[0]
-                        item["count"] = GetAmount(line)
-
-                        hideoutItemList.append(item)
+                    item["count"] = item.get("count") or 0 + GetAmount(line)
 
     # Create quest.json
     if not os.path.exists(os.path.dirname(questsOutput)):
