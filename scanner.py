@@ -36,7 +36,7 @@ def Import():
             if (match):
                 matchSplit = match.groups()[0] .split('|')
                 if (len(matchSplit) > 0):
-                    name = matchSplit[0]
+                    name = matchSplit[0].lower()
                     if name in questItemList:
                         item = questItemList[name]
                     else:
@@ -54,7 +54,7 @@ def Import():
             if (match):
                 matchSplit = match.groups()[0] .split('|')
                 if (len(matchSplit) > 0):
-                    name = matchSplit[0]
+                    name = matchSplit[0].lower()
                     if name in hideoutItemList:
                         item = hideoutItemList[name]
                     else:
